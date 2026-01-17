@@ -1,0 +1,33 @@
+# --- Visual Studio Temporary Files ---
+.vs/
+obj/
+bin/
+x64/
+Debug/
+Release/
+*.user
+*.aps
+*.filters
+*.sln.docstates
+*.suo
+
+# --- Compilation Outputs ---
+*.exe
+*.o
+*.obj
+*.pdb
+*.iobj
+*.ipdb
+*.log
+*.recipe
+*.tlog
+*.lastbuildstate
+*.ipch
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
