@@ -1,7 +1,9 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <Psapi.h>
+#include <Tlhelp32.h>
 #include "../include/process.h"
+
 
 BOOL PrintProcesses() {
 
