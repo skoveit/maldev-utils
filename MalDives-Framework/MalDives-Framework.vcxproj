@@ -135,6 +135,7 @@
     <ClCompile Include="src\debug.c" />
     <ClCompile Include="src\loader.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\process.c" />
     <ClCompile Include="src\process_injection.c" />
     <ClCompile Include="src\rc4.c" />
     <ClCompile Include="src\registry.c" />
@@ -146,6 +147,7 @@
     <ClInclude Include="include\crypt.h" />
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\loader.h" />
+    <ClInclude Include="include\process.h" />
     <ClInclude Include="include\stager.h" />
     <ClInclude Include="src\registry.h" />
   </ItemGroup>
