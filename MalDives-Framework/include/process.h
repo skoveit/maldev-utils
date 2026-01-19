@@ -1,3 +1,4 @@
+#pragma once
 #include <windows.h>
 
 typedef struct _UNICODE_STRING {
@@ -308,9 +309,15 @@ typedef NTSTATUS(NTAPI* fnNtQuerySystemInformation)(
     PVOID                    SystemInformation,
     ULONG                    SystemInformationLength,
     PULONG                   ReturnLength
-    );
+);
 
+// PROCESS ENUM ========================================================================== 
 BOOL PrintProcesses();
 BOOL GetRemoteProcessHandleEnum(IN LPCWSTR szProcName, OUT DWORD* pdwPid, OUT HANDLE* phProcess);
 BOOL GetRemoteProcessHandleNt(IN LPCWSTR szProcName, OUT DWORD* pdwPid, OUT HANDLE* phProcess);
 BOOL GetRemoteProcessHandleSnapshot(LPWSTR szProcessName, DWORD* dwProcessId, HANDLE* hProcess);
+
+// PROCESS INJECTION ========================================================================== 
+BOOL InjectDllToRemoteProcess(HANDLE hProcess, LPWSTR DllName);
+BOOL InjectShellcodeToRemoteProcess(IN HANDLE hProcess, IN PBYTE pShellcode, IN SIZE_T sSizeOfShellcode, OUT PVOID* ppAddress);
+BOOL InjectShellcodeToLocalProcess(IN PBYTE pShellcode, IN SIZE_T sSizeOfShellcode, OUT PVOID* ppAddress);

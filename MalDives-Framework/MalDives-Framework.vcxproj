@@ -131,12 +131,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="include\process_injection.h" />
     <ClCompile Include="src\debug.c" />
+    <ClCompile Include="src\thread_hijacking.c" />
     <ClCompile Include="src\loader.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\process.c" />
-    <ClCompile Include="src\process_injection.c" />
     <ClCompile Include="src\rc4.c" />
     <ClCompile Include="src\registry.c" />
     <ClCompile Include="src\uuid.c" />
@@ -149,7 +148,7 @@
     <ClInclude Include="include\loader.h" />
     <ClInclude Include="include\process.h" />
     <ClInclude Include="include\stager.h" />
-    <ClInclude Include="src\registry.h" />
+    <ClInclude Include="include\threads.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <stdio.h>
-#include "registry.h"
+#include "../include/stager.h"
 
 #pragma comment (lib, "Advapi32.lib") // Used to compile RegGetValueA
 
