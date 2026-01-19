@@ -9,5 +9,5 @@ BOOL ThreadHijacking(PBYTE pPayload, SIZE_T stPayloadSize, LPCSTR DllName, LPCST
 BOOL CreateSuspendedProcess(IN LPCSTR lpProcessName, OUT DWORD* dwProcessId, OUT HANDLE* hProcess, OUT HANDLE* hThread);
 BOOL HijackThread(IN HANDLE hThread, IN PVOID pAddress);
 
-// Loacl
+// Local thread handle
 BOOL GetLocalThreadHandle(IN DWORD dwMainThreadId, OUT DWORD* dwThreadId, OUT HANDLE* hThread);

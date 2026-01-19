@@ -3,6 +3,7 @@
 #include <Psapi.h>
 #include <Tlhelp32.h>
 #include "../include/process.h"
+#include "../include/nt_defs.h"
 
 // PROCESS ENUM ========================================================================== 
 BOOL PrintProcesses() {
